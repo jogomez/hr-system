@@ -1,110 +1,152 @@
-const express = require('express');
 const inquirer = require('inquirer');
-const routes = require('./routes');
-const mysql = require('mysql2');
+const db = require('./config/connection');
+const {
+    main_menu, 
+    menuQuestions, 
+    addEmployeeQuestions,  
+    addRoleQuestions, 
+    addDepartmentQuestions,
+    } = require('./src/question_helper');
 
-const PORT = process.env.PORT || 3001;
-const app = express();
-
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-
-const db = mysql.createConnection(
-    {
-        host: '127.0.0.1',
-        user: 'root',
-        password: '',
-        database: 'hr_db'
-    },
-    console.log(`Connected to the hr_db database.`)
-);
-
-const main_menu = {
-    addEmployee: 'Add an employee',
-    updateEmployee: 'Update an employee',
-    viewAllRoles: 'View all roles',
-    addRole: "Add a role",
-    viewAllDepartments: "View all Departments",
-    addDepartment: "Add a department",
-    quit: 'Quit'
+function init() {
+    inquirer
+    .prompt(menuQuestions)
+    .then(data => {
+        switch (data.menu){
+            case main_menu.addEmployee:
+                addEmployee();                
+                break;
+            case main_menu.updateEmployee:
+                updateEmployeeRole();
+                break;
+            case main_menu.viewAllRoles:
+                viewAllRoles();
+                break;
+            case main_menu.addRole:
+                addRole();
+                break;
+            case main_menu.viewAllDepartments:
+                viewAllDepartments();
+                break;
+            case main_menu.addDepartment:
+                addDepartment();
+                break;                
+            default:
+                return;
+        }
+    });
 }
 
-const menuQuestions = {
-    type: 'list',
-    name: 'menu',
-    message: 'Select an option:',
-    choices: [
-        main_menu.addEmployee, 
-        main_menu.updateEmployeeRole, 
-        main_menu.viewAllRoles, 
-        main_menu.addRole, 
-        main_menu.viewAllDepartments, 
-        main_menu.addDepartment, 
-        main_menu.quit
-        ]
+let employee = {
+    first_name: "",
+    last_name: "",
+    role_id: 0,
+    manager_id: 0,
+    department_id: 0
 }
 
-const addEmployeeQuestions = [
-    {
-        type: 'input',
-        name: 'first_name',
-        message: 'Enter the first name:',
-    },
-    {
-        type: 'input',
-        name: 'last_name',
-        message: 'Enter the last name:',
-    },
-    {
-        type: 'list',
-        name: 'office',
-        message: 'Select department:',
-        chioces:[allDepartments]
-    },
-    {
-        type: 'list',
-        name: 'office',
-        message: 'Select Manager:',
-        chioces:[allEmployeesInDepartment]
-    },
-]
+function addEmployee() {
 
-const addDepartmentQuestions = [
-    {
-        type: 'input',
-        name: 'name',
-        message: 'Enter the name of the engineer',
-    },
-    {
-        type: 'input',
-        name: 'email',
-        message: 'Enter the email of the engineer',
-    },
-    {
-        type: 'input',
-        name: 'github',
-        message: 'Enter the number of github repository of the engineer',
-    },
-]
+db.query (`SELECT * FROM department`,(err,result)=>{
+        
+    let roleOptions, managerOptions = "";
+    const departmentOptions = result.map(row => {
+        return {name: row.name, value: row.id}
+    });
+        // ask for first name, last name and Department
+    inquirer
+    .prompt(addEmployeeQuestions(departmentOptions,roleOptions,managerOptions)
+    .slice(0,3))
+    .then(data => {
+                
+        employee.first_name = data.first_name;
+        employee.last_name = data.last_name;
+        employee.department_id = data.department;
+                
+        db.query (`SELECT r.id, r.title \
+                    FROM role AS r \
+                    INNER JOIN department AS d \
+                    ON r.department_id = d.id \
+                    WHERE d.id = ?`, employee.department_id, 
+                    (err, result) => {
+                        if (err) { console.log(err);
+                                }
+                        else{
+                            const roleOptions = result.map(row => {
+                                return {name: row.title, value: row.id}
+                                });
+                                //ask for role
+                                inquirer
+                                .prompt(addEmployeeQuestions(departmentOptions,roleOptions,managerOptions)
+                                .slice(3,4))
+                                .then(data => {
+                                    console.log('data :>> ', data);
+                                    employee.role_id = data.id;
+                                    db.query (`SELECT e.id, e.first_name, e.last_name \
+                                        FROM employee AS e INNER JOIN \
+                                        role AS r \
+                                        ON e.role_id = r.id \
+                                        INNER JOIN department AS d \
+                                        ON r.department_id = d.id \
+                                        WHERE d.id = ?`, employee.department_id, 
+                                        (err, result) => {
+                                        if (err) { console.log(err);
+                                            }
+                                        else{
+                                            const managerOptions = result.map(row => {
+                                                return {name: row.first_name + " " + row.last_name, 
+                                                        value: row.id
+                                                        }
+                                                });
+                                                    // ask for manager
+                                                    inquirer
+                                                    .prompt(addEmployeeQuestions(departmentOptions,roleOptions,managerOptions)
+                                                    .slice(4))
+                                                    .then(data => {
+                                                    employee.manager_id = data.id;
+                                                    db.query(`INSERT INTO employee \
+                                                    (first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)`, 
+                                                    [employee.first_name, employee.last_name, employee.role_id, employee.manager_id], 
+                                                    (err,res) => {
+                                                        if (err) { console.log(err);
+                                                        }
+                                                        else{
+                                                            console.log(`Employee ${res.insertId} added`);
+                                                            init();
+                                                        }
+                                                    });
+                                                });
+                                        }});
+                                });
+                            }});
+                });
+        });
+}
 
-const intern_questions = [
-    {
-        type: 'input',
-        name: 'name',
-        message: 'Enter the name of the intern',
-    },
-    {
-        type: 'input',
-        name: 'email',
-        message: 'Enter the email of the intern',
-    },
-    {
-        type: 'input',
-        name: 'school',
-        message: 'Enter the name of the school of the intern',
-    },
-]
 
 
+function addRole() {
+    db.query (`SELECT * FROM department`,(err,data)=>{
+        
+        const departmentOptions = data.map(row => {
+            return {name: row.name, value: row.id}
+        });
+
+        inquirer
+        .prompt(addRoleQuestions(departmentOptions))
+        .then(data => {            
+            db.query(`INSERT INTO role \
+            (title, salary, department_id) VALUES (?,?,?)`, 
+            [data.title, data.salary, data.department_id], 
+            (err,res) => {
+                    if (err) { return (err);
+                    }; //console.log('res :>> ', res);
+                    init();
+            });
+        });
+    });
+}
+
+init();
 
 
