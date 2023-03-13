@@ -1,8 +1,10 @@
 
 const main_menu = {
+    viewAllDB: 'View employees, roles, departments',
     addEmployee: 'Add an employee',
     updateEmployeeRole: 'Update an employee\'s role',
     viewAllRoles: 'View all roles',
+    viewAllEmployees : "View all employees",
     addRole: "Add a role",
     viewAllDepartments: "View all Departments",
     addDepartment: "Add a department",
@@ -14,12 +16,14 @@ const menuQuestions = {
     name: 'menu',
     message: 'Select an option:',
     choices: [
-        main_menu.addEmployee, 
-        main_menu.updateEmployeeRole, 
+        main_menu.viewAllDB,
+        main_menu.viewAllEmployees,
         main_menu.viewAllRoles, 
-        main_menu.addRole, 
         main_menu.viewAllDepartments, 
-        main_menu.addDepartment, 
+        main_menu.addEmployee, 
+        main_menu.addRole,
+        main_menu.addDepartment,  
+        main_menu.updateEmployeeRole, 
         main_menu.quit
         ]
 }
@@ -74,6 +78,22 @@ const addRoleQuestions = (allDepartments) => [
     },
 ]
 
+const updateEmployeeRoleQuestions = (allEmployees, allRoles) => [
+    {
+        type: 'list',
+        name: 'employee_id',
+        message: 'Select the employee to update:',
+        choices: allEmployees
+    },
+    {
+        type: 'list',
+        name: 'role',
+        message: 'Select the new role:',
+        choices: allRoles
+    }
+
+]
+
 const addDepartmentQuestions = [
     {
         type: 'input',
@@ -86,6 +106,7 @@ module.exports = {
     main_menu, 
     menuQuestions, 
     addEmployeeQuestions,  
-    addRoleQuestions, 
+    addRoleQuestions,
+    updateEmployeeRoleQuestions, 
     addDepartmentQuestions
 };
