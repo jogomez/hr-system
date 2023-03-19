@@ -184,13 +184,13 @@ db.query (`SELECT * FROM department`,(err,result)=>{
                 
         employee.first_name = data.first_name;
         employee.last_name = data.last_name;
-        employee.department_id = data.department;
+        employee.department_id = data.department;        
                 
         db.query(`SELECT r.id, r.title \
                 FROM role AS r \
                 INNER JOIN department AS d \
                 ON r.department_id = d.id \
-                WHERE d.id = ?`, employee.department_id, 
+                WHERE d.id = ?`, [employee.department_id], 
                 (err, result) => {
                     if (err) { console.log(err);
                         }
@@ -198,11 +198,18 @@ db.query (`SELECT * FROM department`,(err,result)=>{
                         const roleOptions = result.map(row => {
                             return {name: row.title, value: row.id}
                             });
+                            //console.log('roleOptions :>> ', roleOptions);
+                            if (roleOptions.length === 0){
+                                console.clear();
+                                console.log(" \n -- There are no roles on this department, add a role first -- \n");
+                                init();
+                            }
                             //ask for role
-                            inquirer
-                            .prompt(addEmployeeQuestions(departmentOptions,roleOptions,managerOptions)
-                            .slice(3,4))
-                            .then(data => {                                
+                            else { 
+                                inquirer
+                                .prompt(addEmployeeQuestions(departmentOptions,roleOptions,managerOptions)
+                                .slice(3,4))
+                                .then(data => {
                                 employee.role_id = data.role;
                                 db.query (`SELECT e.id, e.first_name, e.last_name \
                                     FROM employee AS e INNER JOIN \
@@ -210,7 +217,7 @@ db.query (`SELECT * FROM department`,(err,result)=>{
                                     ON e.role_id = r.id \
                                     INNER JOIN department AS d \
                                     ON r.department_id = d.id \
-                                    WHERE d.id = ?`, employee.department_id, 
+                                    WHERE d.id = ?`, [employee.department_id], 
                                     (err, result) => {
                                         if (err) { console.log(err);}
                                         else{
@@ -220,10 +227,10 @@ db.query (`SELECT * FROM department`,(err,result)=>{
                                                     }
                                             });
                                         // if there is no manager in the department, assign employee id 1 as the default one
-                                        if (data.manager === undefined ){   
+                                        if (managerOptions.length === 0 ){
+                                                console.log(" \n -- Since this is the first employee of the department, the employee's Manager is Employee Id = 1 -- \n");   
                                                 employee.manager_id = 1;
                                                 insertEmployee();
-                                                init();
                                             }
                                         else{                                        
                                         // ask for manager
@@ -232,13 +239,13 @@ db.query (`SELECT * FROM department`,(err,result)=>{
                                             .slice(4))
                                             .then(data => {
                                                         employee.manager_id = data.manager;     
-                                                        insertEmployee();                                                                                          
-                                                        init();
+                                                        insertEmployee();                                                                                                                                                  
                                                         });
                                                 }    
                                         }
                                     });
-                            });
+                                });
+                            }
                         }});
                 });
         });
@@ -300,8 +307,8 @@ function insertEmployee(){
         if (err) { console.log(err);}
         else{
             console.clear();
-            console.log(`Employee id: ${res.insertId} added`);  
-            return;
+            console.log(`${employee.first_name}, ${employee.last_name} was added with id: ${res.insertId}`);  
+            init();
         }
     });
 }
