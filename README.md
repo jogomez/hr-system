@@ -29,6 +29,9 @@ Notes:
 When adding an employee, make sure the corresponding Deparment and Role already exist, otherwise, the system will ask you to add a first Role for the selected Department. 
 To select a manager for a new employee, you can choose from all the employees in the Department. If it is a new Department, and there are no employees in the deparment yet, the system will default the manager to be employee id = 1.
 
+This is a [demo video](https://drive.google.com/file/d/1uC_fsGf0LNUmsQqrOIoUieJarkvSimIV/view)
+
+
 ## License
 
 ![license](https://img.shields.io/badge/license-MIT-green)
