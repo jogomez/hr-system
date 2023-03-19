@@ -1,13 +1,13 @@
 
 const main_menu = {
-    viewAllDB: 'View employees, roles, departments',
-    addEmployee: 'Add an employee',
-    updateEmployeeRole: 'Update an employee\'s role',
-    viewAllRoles: 'View all roles',
-    viewAllEmployees : "View all employees",
-    addRole: "Add a role",
+    viewAllDB: 'View Employees, Roles, and Departments',
+    addEmployee: 'Add an Employee',
+    updateEmployeeRole: 'Update an Employee\'s Role',
+    viewAllRoles: 'View all Roles',
+    viewAllEmployees : "View all Employees",
+    addRole: "Add a Role",
     viewAllDepartments: "View all Departments",
-    addDepartment: "Add a department",
+    addDepartment: "Add a Department",
     quit: 'Quit'
 }
 
@@ -54,7 +54,7 @@ const addEmployeeQuestions = (allDepartments, allRolesInDepartment, allEmployees
     {
         type: 'list',
         name: 'manager',
-        message: 'Select Manager:',
+        message: 'Select the manager:',
         choices: allEmployeesInDepartment
     }
 ]
@@ -98,7 +98,7 @@ const addDepartmentQuestions = [
     {
         type: 'input',
         name: 'name',
-        message: 'Enter the name of the Department',
+        message: 'Enter the name of the department',
     },
 ]
 
